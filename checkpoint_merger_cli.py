@@ -352,7 +352,7 @@ class Inference:
     def validate(self, prompt_string, image_output, sdxl=False):
         self.pipe.scheduler = self.get_scheduler()
         
-        prompt, negative_prompt, num_inference_steps, width, height, guidance_scale, seed, num_inference_steps, num_images_per_prompt = self.process_prompt_args(prompt_string, sdxl=sdxl)
+        prompt, negative_prompt, num_inference_steps, width, height, guidance_scale, seed, num_images_per_prompt = self.process_prompt_args(prompt_string, sdxl=sdxl)
 
         generator = torch.Generator().manual_seed(seed)
         
