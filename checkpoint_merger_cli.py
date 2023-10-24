@@ -446,10 +446,16 @@ def checkpoint_merger(
         free_memory()
     
         if image_output:
-            image.save(image_output)
+            basename = os.path.splitext(os.path.basename(image_output))[0]
+            dirpath = os.path.dirname(image_output)
+            
+            if isinstance(images, list):
+                for idx, img in enumerate(images):
+                    img.save(os.path.join(dirpath, f'{basename}_{idx}.png'))
+            else:
+                images.save(image_output)
     
-        return image
-
+        return images
 
 def main():
     args = parse_arguments()
