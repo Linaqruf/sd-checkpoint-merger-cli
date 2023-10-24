@@ -207,6 +207,7 @@ class Inference:
                 model_weights,
                 vae=self.vae,
                 use_safetensors=True,
+                torch_dtype=torch.float16,
             ).to('cuda')
         else:
             self.vae = AutoencoderKL.from_single_file("https://huggingface.co/stabilityai/sd-vae-ft-mse-original/blob/main/vae-ft-mse-840000-ema-pruned.safetensors")
@@ -214,6 +215,7 @@ class Inference:
                 model_weights,
                 vae=self.vae,
                 use_safetensors=True,
+                torch_dtype=torch.float16,
             ).to('cuda')
         if not disable_torch_compile:
             self.pipe.unet = torch.compile(self.pipe.unet, mode="reduce-overhead", fullgraph=True)
