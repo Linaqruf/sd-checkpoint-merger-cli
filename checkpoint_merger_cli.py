@@ -200,7 +200,7 @@ class ModelMerger:
             theta_0[key][:, 0:4, :, :] = interpolate(a[:, 0:4, :, :], b, self.multiplier)
 
 class Inference:
-    def __init__(self, model_weights, sdxl=False):
+    def __init__(self, model_weights, sdxl=False, disable_torch_compile=False):
         if sdxl:
             self.vae = AutoencoderKL.from_pretrained("madebyollin/sdxl-vae-fp16-fix")
             self.pipe = StableDiffusionXLPipeline.from_single_file(
@@ -441,7 +441,7 @@ def checkpoint_merger(
     free_memory()
     
     if prompt:
-        infer = Inference(output_path, sdxl=sdxl)
+        infer = Inference(output_path, sdxl=sdxl, disable_torch_compile=disable_torch_compile)
         images = infer.validate(prompt, image_output, sdxl=sdxl)
         free_memory()
     
