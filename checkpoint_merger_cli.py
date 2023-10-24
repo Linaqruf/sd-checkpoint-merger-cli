@@ -215,7 +215,8 @@ class Inference:
                 vae=self.vae,
                 use_safetensors=True,
             ).to('cuda')
-        self.pipe.unet = torch.compile(self.pipe.unet, mode="reduce-overhead", fullgraph=True)
+        if not disable_torch_compile:
+            self.pipe.unet = torch.compile(self.pipe.unet, mode="reduce-overhead", fullgraph=True)
 
 
     @staticmethod
@@ -390,6 +391,8 @@ def parse_arguments():
     parser.add_argument("--image_output", help="Path to save the generated image.")
     parser.add_argument("--sampler", default="Euler a", help="Scheduler sampler for the validation. Defaults to 'Euler a'.")
     parser.add_argument("--sdxl", action="store_true", help="Use StableDiffusionXLPipeline instead of StableDiffusionPipeline.")
+    parser.add_argument("--sdxl", action="store_true", help="Use StableDiffusionXLPipeline instead of StableDiffusionPipeline.")
+    parser.add_argument("--disable_torch_compile", action="store_true", help="Disable torch.compile for the unet model.")
     
     return parser.parse_args()
 
@@ -407,6 +410,7 @@ def checkpoint_merger(
     image_output: Optional[str] = None,
     sampler: str = "Euler a",
     sdxl: bool = False,
+    disable_torch_compile: bool = False,
 ):
     # Notify users about loading the checkpoint
     print("Loading checkpoint...")
@@ -457,6 +461,7 @@ def main():
         image_output=args.image_output,
         sampler=args.sampler,
         sdxl=args.sdxl,
+        disable_torch_compile=args.disable_torch_compile,
     )
 
 if __name__ == "__main__":
