@@ -228,6 +228,7 @@ class Inference:
         width = height = 1024
         guidance_scale = 12
         seed = None
+        images_per_prompt = 1
         
         for parg in prompt_args:
             m = re.match(r"w (\d+)", parg, re.IGNORECASE)
@@ -254,6 +255,10 @@ class Inference:
             if m:  # negative prompt
                 negative_prompt = m.group(1)
                 continue
+            m = re.match(r"t (\d+)", parg, re.IGNORECASE)
+            if m:
+                images_per_prompt = int(m.group(1))
+                continue
                 
         if seed is None:
             seed = random.randint(0, 2**32 - 1)
@@ -261,7 +266,7 @@ class Inference:
         height = max(64, height - height % 8)
         width = max(64, width - width % 8)
         
-        return prompt, negative_prompt, num_inference_steps, width, height, guidance_scale, seed
+        return prompt, negative_prompt, num_inference_steps, width, height, guidance_scale, seed, images_per_prompt
         
     def get_scheduler(self, name="Euler a"):
         # Get scheduler
@@ -347,9 +352,8 @@ class Inference:
     def validate(self, prompt_string, image_output, sdxl=False):
         self.pipe.scheduler = self.get_scheduler()
         
-        prompt, negative_prompt, num_inference_steps, width, height, guidance_scale, seed = self.process_prompt_args(prompt_string, sdxl=sdxl)
+        prompt, negative_prompt, num_inference_steps, width, height, guidance_scale, seed, num_inference_steps, num_images_per_prompt = self.process_prompt_args(prompt_string, sdxl=sdxl)
 
-        num_images_per_prompt = 1
         generator = torch.Generator().manual_seed(seed)
         
         print("\nInference Parameters:")
@@ -382,15 +386,13 @@ def parse_arguments():
     parser.add_argument("output_path", help="Path to save the merged model.")
     parser.add_argument("--secondary_model", help="Path to the secondary model checkpoint.")
     parser.add_argument("--tertiary_model", help="Path to the tertiary model checkpoint.")
-    parser.add_argument("--interpolation", choices=["add-difference", "weighted-sum"],
-                        help="Interpolation method to use.")
+    parser.add_argument("--interpolation", choices=["add-difference", "weighted-sum"], help="Interpolation method to use.")
     parser.add_argument("--multiplier", type=float, default=1.0, help="Multiplier for the interpolation.")
     parser.add_argument("--half", action="store_true", help="Halve the tensor if necessary.")
     parser.add_argument("--discard_weights", help="Pattern of weights to discard.")
     parser.add_argument("--prompt", help="Positive prompts for the validation.")
     parser.add_argument("--image_output", help="Path to save the generated image.")
     parser.add_argument("--sampler", default="Euler a", help="Scheduler sampler for the validation. Defaults to 'Euler a'.")
-    parser.add_argument("--sdxl", action="store_true", help="Use StableDiffusionXLPipeline instead of StableDiffusionPipeline.")
     parser.add_argument("--sdxl", action="store_true", help="Use StableDiffusionXLPipeline instead of StableDiffusionPipeline.")
     parser.add_argument("--disable_torch_compile", action="store_true", help="Disable torch.compile for the unet model.")
     
@@ -442,7 +444,12 @@ def checkpoint_merger(
         infer = Inference(output_path, sdxl=sdxl)
         image = infer.validate(prompt, image_output, sdxl=sdxl)
         free_memory()
+    
+        if image_output:
+            image.save(image_output)
+    
         return image
+
 
 def main():
     args = parse_arguments()
