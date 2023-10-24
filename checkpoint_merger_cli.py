@@ -442,7 +442,7 @@ def checkpoint_merger(
     
     if prompt:
         infer = Inference(output_path, sdxl=sdxl)
-        image = infer.validate(prompt, image_output, sdxl=sdxl)
+        images = infer.validate(prompt, image_output, sdxl=sdxl)
         free_memory()
     
         if image_output:
